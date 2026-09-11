@@ -1,0 +1,61 @@
+name: Eval Gate
+
+on:
+  pull_request:
+    paths:
+      - 'src/prompts.py'
+      - 'src/classify_intent.py'
+      - 'src/retrieval.py'
+      - 'src/baseline_keyword.py'
+      - 'src/baseline_trivial.py'
+      - 'src/eval_utils.py'
+  push:
+    branches: [main]
+    paths:
+      - 'src/prompts.py'
+      - 'src/classify_intent.py'
+      - 'src/retrieval.py'
+      - 'src/baseline_keyword.py'
+      - 'src/baseline_trivial.py'
+      - 'src/eval_utils.py'
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run baseline eval (no API calls - always safe to run in CI)
+        run: |
+          python src/baseline_trivial.py
+          python src/baseline_keyword.py
+
+      - name: Check baseline results didn't regress
+        run: |
+          python -c "
+          import json
+          with open('eval/results/baseline_trivial_majority_class.json') as f:
+              trivial = json.load(f)
+          with open('eval/results/baseline_simple_keyword.json') as f:
+              keyword = json.load(f)
+          print(f'Trivial baseline accuracy: {trivial[\"accuracy\"]:.3f}')
+          print(f'Keyword baseline accuracy: {keyword[\"accuracy\"]:.3f}')
+          assert keyword['accuracy'] > trivial['accuracy'] * 1.5, \
+              'Keyword baseline no longer clears trivial baseline by expected margin - investigate before merging'
+          print('Baseline sanity check passed.')
+          "
+
+      - name: Upload eval results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: eval/results/
+</parameter>
