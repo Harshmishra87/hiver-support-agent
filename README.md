@@ -84,40 +84,62 @@ commands. Full regeneration involves ~1,000+ Gemini API calls across classificat
 escalation, and judging — expect several hours across multiple days due to free-tier daily quota
 limits (500 requests/day on `gemini-3.1-flash-lite`), unless billing is enabled on the API project.
 
-## Project structure
+## Project Structure
 
-src/ Pipeline code
-explore_brands.py Brand selection analysis
-look_at_brand.py Sample real AmericanAir conversation pairs
-build_golden_candidates.py Sample candidates for hand-labeling
-label_tool.py Streamlit tool used for hand-labeling the golden set
-baseline_trivial.py Majority-class baseline
-baseline_keyword.py Keyword/rule-based baseline
-build_retrieval_corpus.py Builds historical pairs corpus (excludes golden set)
-retrieval.py TF-IDF retriever
-prompts.py All LLM prompts (classification, drafting, escalation, judge)
-classify_intent.py Intent classification against golden set
-generate_drafts.py Reply drafting against golden set
-escalate.py Escalation decisioning against golden set
-judge_replies.py LLM-as-judge scoring of drafted replies
-human_judge_tool.py Streamlit tool for human judge-validation scoring
-judge_agreement.py Judge-vs-human Cohen's kappa + disagreement analysis
-eval_utils.py Shared evaluation/metrics harness
+## Project Structure
+
+```text
+src/
+├── agent.py                     # Main support agent pipeline
+├── prompts.py                   # All LLM prompts
+├── retrieval.py                 # TF-IDF retrieval system
+├── eval_utils.py                # Shared evaluation utilities
+
+├── explore_brands.py            # Brand selection analysis
+├── look_at_brand.py             # Inspect real conversation samples
+├── sample_100.py                # Sample dataset examples
+
+├── build_golden_candidates.py   # Generate candidates for annotation
+├── label_tool.py                # Streamlit labeling interface
+├── check_golden_dupes.py        # Detect duplicate golden examples
+
+├── baseline_trivial.py          # Majority-class baseline
+├── baseline_keyword.py          # Rule-based baseline
+
+├── classify_intent.py           # Intent classification evaluation
+├── generate_drafts.py           # Reply generation evaluation
+├── escalate.py                  # Escalation prediction evaluation
+
+├── judge_replies.py             # LLM-as-judge evaluation
+├── human_judge_tool.py          # Human evaluation interface
+├── judge_agreement.py           # Judge-human agreement analysis
+
+├── find_misclassifications.py   # Error analysis
+├── debug_id_mismatch.py         # Dataset debugging utilities
+
+├── demo_app.py                  # Interactive demo application
+
+├── test_draft_reply.py          # Reply generation tests
+└── test_gemini.py               # Gemini integration tests
+
+__pycache__/                     # Python cache files
 
 eval/
-INTENT_TAXONOMY.md 8-intent taxonomy with definitions and boundary rules
-golden/ Golden evaluation set (258 hand-labeled examples)
-results/ All evaluation outputs (baselines, classification, judge scores)
+├── INTENT_TAXONOMY.md        # 8-intent taxonomy with definitions and boundary rules
+├── golden/                  # Golden evaluation set (258 hand-labeled examples)
+└── results/                 # All evaluation outputs (baselines, classification, judge scores)
 
 data/
-raw/ Downloaded Kaggle dataset (git-ignored)
-processed/ Retrieval corpus, sample pairs
+├── raw/                     # Downloaded Kaggle dataset (git-ignored)
+└── processed/               # Retrieval corpus, sample pairs
 
-.github/workflows/
-eval-gate.yml CI: reruns baseline eval on prompt/retrieval changes
+.github/
+└── workflows/
+    └── eval-gate.yml        # CI: reruns baseline eval on prompt/retrieval changes
 
-DECISIONS.md Non-obvious decision log
-REPORT.md Full report (baselines, failure analysis, business framing)
+DECISIONS.md                 # Non-obvious decision log
+REPORT.md                    # Full report (baselines, failure analysis, business framing)
+```
 
 ## Notes on the dataset
 

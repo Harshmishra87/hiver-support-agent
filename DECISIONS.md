@@ -103,3 +103,8 @@ Non-obvious decisions made during this project, and why. Chronological.
     API quota and add latency for marginal signal, since baseline regressions already catch most
     accidental breakage (e.g. a broken import, a corrupted golden set) cheaply and fast. Full
     LLM-based evaluation stays a manual, deliberate step.
+
+19. **Demo app wraps `run_agent()` in a try/except with a clean `st.error()` fallback**, rather
+    than letting exceptions crash the app. Verified this works correctly when the daily API
+    quota was hit mid-testing — the app showed a readable error instead of a stack trace, which
+    matters for a live demo shown to a reviewer.

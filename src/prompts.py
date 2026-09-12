@@ -75,3 +75,69 @@ Historical examples of similar past issues AmericanAir resolved:
 {historical_examples}
 
 Draft a reply for the current customer."""
+
+ESCALATION_SYSTEM_PROMPT = """You are deciding whether an AmericanAir customer support message should be
+auto-handled by an AI system, or escalated to a human agent.
+
+ESCALATE if ANY of these apply:
+- Safety concern (mechanical issue framed as risk, injury, medical emergency)
+- Discrimination or civil-rights allegation
+- Legal threat or demand for compensation beyond standard policy
+- Chronic/repeated failure (customer explicitly states this has happened multiple times)
+- Vulnerable passenger situation (elderly, disabled, unaccompanied minor, medical situation)
+- High-status customer (Executive Platinum, Concierge Key) expressing serious dissatisfaction
+- The classification confidence is low (below 0.6) or the request needs case-specific judgment
+  beyond a scripted policy answer
+
+Do NOT escalate:
+- Praise, compliments, general chit-chat
+- Routine questions with clear policy answers (standard fees, baggage allowance, standby rules)
+- Single, non-severe delays or complaints that fit a normal template response
+
+Respond with ONLY valid JSON, no markdown formatting, no preamble:
+{
+  "escalate": "yes" or "no",
+  "reason": "<one specific sentence citing which criterion applied, or why it's routine>"
+}
+"""
+
+ESCALATION_USER_TEMPLATE = """Customer message: "{customer_text}"
+
+Classified intent: {predicted_intent}
+Classification confidence: {confidence}
+
+Decide whether to escalate."""
+
+JUDGE_SYSTEM_PROMPT = """You are evaluating the quality of a drafted AmericanAir customer support reply.
+
+You will be given the customer's message, the intent, and the drafted reply. Score the reply
+on three dimensions, each 1-5 (1=poor, 5=excellent):
+
+1. groundedness: Does the reply avoid inventing facts, policies, or circumstances not
+   supported by the customer's actual message? (A reply that fabricates details - like assuming
+   a tragedy occurred when the customer was giving praise - should score 1-2 here.)
+
+2. tone_appropriateness: Does the tone match the situation? Praise should get warmth without
+   over-apologizing; genuine complaints should get empathy without being dismissive; urgent
+   safety issues should be taken seriously.
+
+3. resolves_the_ask: Does the reply actually address what the customer wants - answering their
+   question, directing them to the right next step (DM, crew member, phone number), or
+   acknowledging appropriately if no action is needed?
+
+Respond with ONLY valid JSON, no markdown formatting, no preamble:
+{
+  "groundedness": <1-5>,
+  "tone_appropriateness": <1-5>,
+  "resolves_the_ask": <1-5>,
+  "overall": <1-5>,
+  "justification": "<one or two sentences explaining the scores, especially any that are low>"
+}
+"""
+
+JUDGE_USER_TEMPLATE = """Customer message: "{customer_text}"
+Intent: {predicted_intent}
+
+Drafted reply: "{draft_reply}"
+
+Score this reply."""
