@@ -83,6 +83,36 @@ commands. Full regeneration involves ~1,000+ Gemini API calls across classificat
 escalation, and judging — expect several hours across multiple days due to free-tier daily quota
 limits (500 requests/day on `gemini-3.1-flash-lite`), unless billing is enabled on the API project.
 
+# Golden Set: Sampling & Labeling Methodology
+
+**Size**: 258 unique examples (300 initially sampled, oversampled above the 150-250 target to
+absorb labeling attrition; final count after quality filtering and deduplication is 258).
+
+**Sampling method**: Random sample (`random_state=2024`) drawn from AmericanAir's ~36,764
+historical reply pairs in the Customer Support on Twitter dataset, after filtering out customer
+messages under 15 characters (too short to carry meaningful intent signal). See
+`src/build_golden_candidates.py` for the exact code. No stratification was applied — the sample
+reflects the natural distribution of AmericanAir's real inbound Twitter volume, including its
+heavy skew toward praise/chit-chat (~25-30%) and flight disruption/service complaints.
+
+**Labeling method**: Each example was hand-labeled by the author against the 8-category taxonomy
+in `eval/INTENT_TAXONOMY.md` (itself derived from two earlier real-data samples, not designed
+upfront — see `DECISIONS.md` #4). Labeling covered three fields per example:
+
+- `intent_label` — one of the 8 taxonomy categories, applied using the documented rule
+  ("classify by the actionable ask, not the emotional framing")
+- `escalate` — yes/no, whether the message should route to a human
+- `escalate_reason` — a brief note on why (or why not)
+
+A custom Streamlit tool (`src/label_tool.py`) was built partway through to speed up labeling —
+one-click intent selection with the taxonomy definitions visible for reference, plus an
+escalate toggle — rather than typing directly into spreadsheet cells.
+
+**Known limitation**: the escalation label is the harder of the two to review at scale — only
+29 of 258 examples (11.2%) are true escalations, which is a real class imbalance worth noting
+when interpreting escalation metrics (see `REPORT.md` Section 2 for the resulting wide confidence
+interval on escalation recall).
+
 ## Project Structure
 
 ```text
